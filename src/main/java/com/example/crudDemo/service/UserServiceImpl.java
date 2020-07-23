@@ -1,21 +1,21 @@
 package com.example.crudDemo.service;
 
+import com.example.crudDemo.repository.UserRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.Month;
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
-import java.util.concurrent.atomic.AtomicLong;
 
 import com.example.crudDemo.model.*;
 
 @Service
 public class UserServiceImpl implements UserService {
 
-    private static final Map<Long, User> USER_REPOSITORY_MAP = new HashMap<>();
-
-    private static final AtomicLong USER_ID_COUNTER = new AtomicLong();
+    @Autowired
+    private UserRepository userRepository;
 
     private String[] firstNamesList = new String[]{"Liam", "Emma", "Noah", "Olivia", "William", "Ava", "James", "Isabella", "Oliver", "Sophia"};
     private String[] lastNamesList = new String[]{"Smith", "Johnson", "Williams", "Brown", "Jones", "Miller", "Davis", "Garcia", "Rodriguez", "Wilson"};
@@ -34,26 +34,24 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public void create(User user) {
-        long userID = USER_ID_COUNTER.incrementAndGet();
-        user.setId(userID);
-        USER_REPOSITORY_MAP.put(userID, user);
+        userRepository.save(user);
     }
 
     @Override
     public List<User> readAll() {
-        return new ArrayList<>(USER_REPOSITORY_MAP.values());
+        return userRepository.findAll();
     }
 
     @Override
     public User read(Long id) {
-        return USER_REPOSITORY_MAP.get(id);
+        return userRepository.getOne(id);
     }
 
     @Override
     public boolean update(User user, Long id) {
-        if (USER_REPOSITORY_MAP.containsKey(id)) {
+        if (userRepository.existsById(id)) {
             user.setId(id);
-            USER_REPOSITORY_MAP.put(id, user);
+            userRepository.save(user);
             return true;
         }
         return false;
@@ -61,6 +59,10 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public boolean delete(Long id) {
-        return USER_REPOSITORY_MAP.remove(id) != null;
+        if (userRepository.existsById(id)) {
+            userRepository.deleteById(id);
+            return true;
+        }
+        return false;
     }
 }
